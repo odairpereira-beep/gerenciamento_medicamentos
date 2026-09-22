@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "223895161474",
+    "project_id": "gerenciamento-medicamento-oda",
+    "storage_bucket": "gerenciamento-medicamento-oda.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:223895161474:android:ba4d195c0859734762429b",
+        "android_client_info": {
+          "package_name": "com.example.gerenciamento_medicamentos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAZ_RoMcTz-MnLPNc2_plVhTtVE35lRk6M"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

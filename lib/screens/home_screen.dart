@@ -2,135 +2,159 @@ import 'package:flutter/material.dart';
 
 import '../models/medicamento.dart';
 import '../services/medicamento_service.dart';
+import '../widgets/medicamento_card.dart';
 import 'cadastro_medicamento_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+  final Stream<List<Medicamento>>? medicamentosStream;
+
+  const HomeScreen({super.key, this.medicamentosStream});
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  void _abrirCadastro() async {
+  Future<void> _cadastrarMedicamento() async {
     final medicamento = await Navigator.push<Medicamento>(
       context,
       MaterialPageRoute(builder: (_) => const CadastroMedicamentoScreen()),
     );
 
-    if (medicamento != null) {
-      setState(() {
-        MedicamentoService.adicionar(medicamento);
-      });
+    if (medicamento == null) return;
+
+    try {
+      await MedicamentoService.adicionar(medicamento);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Medicamento cadastrado com sucesso.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao cadastrar medicamento: $e')),
+      );
     }
   }
 
-  void _removerMedicamento(String id) {
-    setState(() {
-      MedicamentoService.remover(id);
-    });
+  Future<void> _excluirMedicamento(String id) async {
+    try {
+      await MedicamentoService.remover(id);
 
-    ScaffoldMessenger.of(context)
-        .showSnackBar(const SnackBar(content: Text('Medicamento removido.')));
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Medicamento removido com sucesso.')),
+      );
+    } catch (e) {
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Erro ao remover medicamento: $e')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final medicamentos = MedicamentoService.listar();
-
     return Scaffold(
       appBar: AppBar(title: const Text('Meus Medicamentos'), centerTitle: true),
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final largura = constraints.maxWidth;
 
-      body: medicamentos.isEmpty
-          ? _buildEstadoVazio()
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: medicamentos.length,
-              itemBuilder: (context, index) {
-                final medicamento = medicamentos[index];
+          final padding = largura < 600
+              ? 16.0
+              : largura < 1000
+              ? 32.0
+              : 80.0;
 
-                return _buildMedicamentoCard(medicamento);
-              },
+          return Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 1000),
+              child: Padding(
+                padding: EdgeInsets.all(padding),
+                child: StreamBuilder<List<Medicamento>>(
+                  stream:
+                      widget.medicamentosStream ?? MedicamentoService.listar(),
+                  builder: (context, snapshot) {
+                    if (snapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Erro ao carregar medicamentos:\n${snapshot.error}',
+                          textAlign: TextAlign.center,
+                        ),
+                      );
+                    }
+
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    final medicamentos = snapshot.data ?? [];
+
+                    if (medicamentos.isEmpty) {
+                      return _estadoVazio();
+                    }
+
+                    return ListView.builder(
+                      itemCount: medicamentos.length,
+                      itemBuilder: (context, index) {
+                        final medicamento = medicamentos[index];
+
+                        return MedicamentoCard(
+                          medicamento: medicamento,
+                          onDelete: () => _excluirMedicamento(medicamento.id),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
             ),
-
+          );
+        },
+      ),
       floatingActionButton: FloatingActionButton.extended(
-        onPressed: _abrirCadastro,
+        onPressed: _cadastrarMedicamento,
         icon: const Icon(Icons.add),
-        label: const Text('Adicionar'),
+        label: const Text('Adicionar medicamento'),
       ),
     );
   }
 
-  Widget _buildEstadoVazio() {
+  Widget _estadoVazio() {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.medication_outlined,
-              size: 80,
-              color: Theme.of(context).colorScheme.primary,
-            ),
-
-            const SizedBox(height: 20),
-
-            const Text(
-              'Nenhum medicamento cadastrado',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-
-            const SizedBox(height: 10),
-
-            const Text(
-              'Cadastre seu primeiro medicamento '
-              'para começar a organizar seus horários.',
-              textAlign: TextAlign.center,
-            ),
-
-            const SizedBox(height: 25),
-
-            FilledButton.icon(
-              onPressed: _abrirCadastro,
-              icon: const Icon(Icons.add),
-              label: const Text('Cadastrar medicamento'),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildMedicamentoCard(Medicamento medicamento) {
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      child: ListTile(
-        leading: CircleAvatar(child: const Icon(Icons.medication)),
-
-        title: Text(
-          medicamento.nome,
-          style: const TextStyle(fontWeight: FontWeight.bold),
-        ),
-
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 6),
-          child: Text(
-            '${medicamento.dosagem}\n'
-            '${medicamento.frequencia} • '
-            '${medicamento.horario}',
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.medication_outlined,
+            size: 80,
+            color: Theme.of(context).colorScheme.primary,
           ),
-        ),
-
-        isThreeLine: true,
-
-        trailing: IconButton(
-          icon: const Icon(Icons.delete_outline),
-          onPressed: () {
-            _removerMedicamento(medicamento.id);
-          },
-        ),
+          const SizedBox(height: 20),
+          const Text(
+            'Nenhum medicamento cadastrado',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+          const Text(
+            'Cadastre um medicamento para começar '
+            'a organizar seus horários.',
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 25),
+          FilledButton.icon(
+            onPressed: _cadastrarMedicamento,
+            icon: const Icon(Icons.add),
+            label: const Text('Cadastrar medicamento'),
+          ),
+        ],
       ),
     );
   }
