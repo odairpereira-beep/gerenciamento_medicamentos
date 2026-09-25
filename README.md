@@ -21,34 +21,43 @@ A proposta busca contribuir para uma melhor organização do tratamento, reduzin
 * **Git** – controle de versão;
 * **GitHub** – hospedagem e gerenciamento do código-fonte.
 
+## 🗄️ Banco de dados
+
+O projeto utiliza o **Cloud Firestore**, banco de dados NoSQL orientado a documentos.
+
+Os medicamentos são armazenados na coleção:
+
+```text
+medicamentos
+
 ## 📱 Funcionalidades implementadas
 
-Atualmente, a aplicação possui:
+AAtualmente, a aplicação permite registrar:
 
-* Cadastro de medicamentos;
-* Cadastro do nome do medicamento;
-* Cadastro da dosagem;
-* Seleção da frequência de utilização;
-* Seleção do horário do medicamento;
-* Campo para observações;
-* Validação dos campos obrigatórios;
-* Mensagem para quando não existem medicamentos cadastrados;
-* Interface adaptável a diferentes tamanhos de tela.
+- Nome do medicamento;
+- Dosagem;
+- Frequência de utilização;
+- Horário;
+- Observações;
+- Data de criação do registro.
+
+Os dados são armazenados de forma persistente utilizando o **Cloud Firestore**, serviço de banco de dados NoSQL do Firebase.
+
 
 ## 🖥️ Estrutura do projeto
 
-```text
 gerenciamento_medicamentos/
 │
 ├── lib/
 │   ├── main.dart
+│   ├── firebase_options.dart
 │   │
 │   ├── models/
 │   │   └── medicamento.dart
 │   │
 │   ├── screens/
-│   │   ├── cadastro_medicamento_screen.dart
-│   │   └── home_screen.dart
+│   │   ├── home_screen.dart
+│   │   └── cadastro_medicamento_screen.dart
 │   │
 │   ├── services/
 │   │   └── medicamento_service.dart
@@ -60,9 +69,7 @@ gerenciamento_medicamentos/
 │   └── widget_test.dart
 │
 ├── pubspec.yaml
-├── README.md
-└── .gitignore
-```
+└── README.md
 
 ## 🏗️ Organização da aplicação
 
@@ -200,8 +207,6 @@ As alterações devem ser registradas em commits com mensagens que descrevam de 
 Entre as funcionalidades que serão incorporadas em versões futuras estão:
 
 * autenticação de usuários;
-* armazenamento permanente dos dados;
-* integração com Firebase;
 * notificações e lembretes automáticos;
 * histórico de utilização dos medicamentos;
 * edição de medicamentos cadastrados;
